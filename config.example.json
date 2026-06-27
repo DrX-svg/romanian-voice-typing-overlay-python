@@ -1,0 +1,41 @@
+{
+  "ui": {
+    "title": "Romanian Voice Typing Overlay",
+    "geometry": "560x500+60+60",
+    "always_on_top": true
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "dtype": "int16"
+  },
+  "transcription": {
+    "model": "Infomaniak-AI/faster-whisper-large-v3-turbo",
+    "language": "ro",
+    "beam_size": 3,
+    "without_timestamps": true,
+    "condition_on_previous_text": false,
+    "vad_filter": false,
+    "device": "cpu",
+    "compute_type": "int8",
+    "download_root": "%LOCALAPPDATA%\\RomanianVoiceTyping\\models"
+  },
+  "asr_preset": "balanced",
+  "hotkey": "f10",
+  "hotkey_options": {
+    "auto_paste_after_hotkey_transcription": true
+  },
+  "paste": {
+    "restore_clipboard_after_paste": true,
+    "paste_delay_ms": 150
+  },
+  "show_advanced_devices": false,
+  "window_opacity": 1.0,
+  "dark_mode": false,
+  "input_device_index": null,
+  "input_device_name": null,
+  "paths": {
+    "logs_dir": "logs",
+    "temp_dir": "temp"
+  }
+}

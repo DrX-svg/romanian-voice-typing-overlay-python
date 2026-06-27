@@ -1,0 +1,18 @@
+Romanian Voice Typing Overlay
+Copyright (C) 2026 DrX-svg
+
+This project's original source code is developed and maintained by DrX-svg.
+
+This repository's original source code is licensed under the GNU General Public License v3.0 only.
+
+Contact: GitHub profile DrX-svg
+
+This software uses open-source components, including:
+- faster-whisper
+- NumPy
+- sounddevice
+- keyboard
+
+Third-party libraries remain under their respective licenses.
+
+Whisper model files are not included in this repository and may be subject to their own licenses and terms.
