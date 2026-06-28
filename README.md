@@ -33,6 +33,12 @@ Clone the repository, open PowerShell in the project folder, and choose one of t
 
 The default configuration uses CPU transcription (`device = cpu`, `compute_type = int8`) for broad compatibility. CUDA is optional and can be enabled later on compatible NVIDIA systems.
 
+Internet access is required for the first setup and for the first model download. 
+
+`setup_windows.ps1` installs the Python dependencies. The first time you start the overlay with `run_overlay.ps1`, the configured Whisper model may be downloaded from Hugging Face.
+
+After the model is available locally, transcription runs locally and does not use an online speech-to-text API
+
 ### Option 1: Quick Windows setup
 
 ```powershell
