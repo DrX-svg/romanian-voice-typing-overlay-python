@@ -13,6 +13,28 @@ Regression tests use fake hardware, model, GUI, and clipboard backends.
 | O1 | audio_capture | Configuring dtype other than int16 allows capture but export fails. Severity: Low. | `src/voice_typing_ro/audio_capture.py:704` rejects every other dtype; settings permits arbitrary dtype strings. | Not changed; validate dtype or implement conversion in a future task. | Not added (outside scope). | — | Open |
 | O2 | app | With retention enabled, recordings stopped within the same second can overwrite an earlier WAV. Severity: Low. | `src/voice_typing_ro/app.py:405` uses second-resolution filenames without collision handling. Static finding; timing scenario not executed. | Not changed; use unique filenames in a future task. | Not added (outside scope). | — | Open |
 | O3 | settings | Nonfinite opacity can reach the GUI outside the intended numeric range. Severity: Low. | `src/voice_typing_ro/settings.py:90` accepts float NaN and clamping does not reject it. Static finding; GUI effect unverified. | Not changed; reject nonfinite values in a future task. | Not added (outside scope). | — | Open |
+| O4 | settings | Boolean config strings such as `"false"` become True. Severity: Low. | Boolean normalization uses `bool()` truthiness; affected keys and source locations are listed below. | Not changed; only the known-defect test expectation is corrected and marked strict xfail. | `tests/test_settings.py::test_dark_mode[false-False]` | — | Open |
+
+## O4: Boolean truthiness normalization
+
+Every boolean config key below accepts a nonempty string such as `"false"` as
+True. Locations refer to `src/voice_typing_ro/settings.py`:
+
+| Config key | File:line |
+| --- | --- |
+| `ui.always_on_top` | `src/voice_typing_ro/settings.py:298` |
+| `audio.keep_temp_recordings` | `src/voice_typing_ro/settings.py:312` |
+| `transcription.without_timestamps` | `src/voice_typing_ro/settings.py:327` |
+| `transcription.condition_on_previous_text` | `src/voice_typing_ro/settings.py:333` |
+| `transcription.vad_filter` | `src/voice_typing_ro/settings.py:339` |
+| `show_advanced_devices` | `src/voice_typing_ro/settings.py:363` |
+| `dark_mode` | `src/voice_typing_ro/settings.py:369` via `normalize_dark_mode` at `src/voice_typing_ro/settings.py:99` |
+| `paste.restore_clipboard_after_paste` | `src/voice_typing_ro/settings.py:379` |
+| `hotkey_options.auto_paste_after_hotkey_transcription` | `src/voice_typing_ro/settings.py:522` (load); legacy `hotkey.auto_paste_after_hotkey_transcription` migration at `src/voice_typing_ro/settings.py:263` |
+
+`tests/test_settings.py::test_dark_mode[false-False]` asserts the intended False
+result and is the only case marked `xfail(strict=True)` for this defect. The
+normalization implementation remains unchanged.
 
 ## Verification
 
@@ -22,10 +44,15 @@ All now pass. Full suite on Windows with Python 3.11.9: 70 total, 70 passed,
 0 skipped, 0 failed. Every commit was preceded by a passing full suite and
 `git diff --check`.
 
-The 10 cases in `tests/test_app.py` and the one case in
+The 11 cases in `tests/test_app.py` and the one case in
 `tests/test_text_inserter.py` are explicitly Windows-only and skip before importing
 Windows modules on other platforms. CI targets Python 3.10 on Ubuntu and Windows,
 installs only `requirements-dev.txt`, and runs `python -m pytest -v`.
 The workflow was reviewed manually; Actions and Linux/Python 3.10 were not run
 locally. No GUI, physical microphone, model inference, GPU, or real clipboard
 operations were exercised.
+
+Closeout verification: 71 total, 70 passed, 1 xfailed, 0 skipped, 0 failed on
+Windows/Python 3.11.9. The additional worker test confirms that an already-missing
+WAV is silently accepted; other deletion failures still log. The strict xfail
+records O4 without treating the defective boolean conversion as intended behavior.
