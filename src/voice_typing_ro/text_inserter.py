@@ -597,26 +597,27 @@ class WindowsTextInserter:
         if not memory_handle:
             raise RuntimeError("GlobalAlloc failed for clipboard text.")
 
-        locked = kernel32.GlobalLock(memory_handle)
-        if not locked:
-            kernel32.GlobalFree(memory_handle)
-            raise RuntimeError("GlobalLock failed for clipboard text.")
-
         try:
-            ctypes.memmove(locked, data, size)
-        finally:
-            kernel32.GlobalUnlock(memory_handle)
+            locked = kernel32.GlobalLock(memory_handle)
+            if not locked:
+                raise RuntimeError("GlobalLock failed for clipboard text.")
 
-        self._open_clipboard()
-        try:
-            if not user32.EmptyClipboard():
-                raise RuntimeError("EmptyClipboard failed.")
+            try:
+                ctypes.memmove(locked, data, size)
+            finally:
+                kernel32.GlobalUnlock(memory_handle)
 
-            if not user32.SetClipboardData(CF_UNICODETEXT, memory_handle):
-                raise RuntimeError("SetClipboardData failed.")
-            memory_handle = None
+            self._open_clipboard()
+            try:
+                if not user32.EmptyClipboard():
+                    raise RuntimeError("EmptyClipboard failed.")
+
+                if not user32.SetClipboardData(CF_UNICODETEXT, memory_handle):
+                    raise RuntimeError("SetClipboardData failed.")
+                memory_handle = None
+            finally:
+                user32.CloseClipboard()
         finally:
-            user32.CloseClipboard()
             if memory_handle:
                 kernel32.GlobalFree(memory_handle)
 
