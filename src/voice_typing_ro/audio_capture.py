@@ -560,6 +560,7 @@ class ManualAudioRecorder:
         logger: logging.Logger,
         input_device_index: int | None = None,
         input_device_name: str | None = None,
+        preprocess: bool = False,
     ):
         self.sample_rate = sample_rate
         self.channels = channels
@@ -567,6 +568,7 @@ class ManualAudioRecorder:
         self.logger = logger
         self.input_device_index = input_device_index
         self.input_device_name = input_device_name
+        self.preprocess = preprocess
         self._stream = None
         self._chunks: list[np.ndarray] = []
         self._lock = threading.Lock()
@@ -659,6 +661,11 @@ class ManualAudioRecorder:
         audio = np.concatenate(chunks, axis=0)
         if audio.size == 0:
             raise AudioCaptureError("Captured audio buffer is empty.")
+
+        if self.preprocess:
+            from .dsp import preprocess_recording
+
+            audio = preprocess_recording(audio, self.sample_rate)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         self._write_wav(output_path, audio)

@@ -106,3 +106,15 @@ def test_keep_temp_recordings_normalized(temp_config, value, expected):
 def test_keep_temp_recordings_default(temp_config):
     assert settings.load_settings().keep_temp_recordings is False
     assert json.loads(temp_config.read_text())["audio"]["keep_temp_recordings"] is False
+
+
+@pytest.mark.parametrize("value", [False, True])
+def test_preprocess_config_round_trip(temp_config, value):
+    temp_config.write_text(json.dumps({"audio": {"preprocess": value}}))
+    assert settings.load_settings().preprocess is value
+    assert json.loads(temp_config.read_text())["audio"]["preprocess"] is value
+
+
+def test_preprocess_default_disabled(temp_config):
+    assert settings.load_settings().preprocess is False
+    assert json.loads(temp_config.read_text())["audio"]["preprocess"] is False

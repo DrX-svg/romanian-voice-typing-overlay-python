@@ -96,3 +96,24 @@ def test_stop_failure_always_closes_stream(fake_sd, tmp_path, operation):
     stream.close.assert_called_once_with()
     assert recorder._stream is None
     assert not recorder.is_recording
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_recording_optional_preprocessing(fake_sd, tmp_path, enabled):
+    recorder = audio.ManualAudioRecorder(16000, 1, "int16", logging.getLogger("test"), preprocess=enabled)
+    recorder.start_recording()
+    signal = np.zeros((32000, 1), dtype=np.int16)
+    signal[12000:20000] = 1000
+    recorder._audio_callback(signal, len(signal), None, None)
+    result = recorder.stop_recording(tmp_path / "processed.wav")
+    expected_frames = 14960 if enabled else 32000
+    assert result.frame_count == expected_frames
+    assert result.duration_seconds == expected_frames / 16000
+    with wave.open(str(result.wav_path), "rb") as wav:
+        assert wav.getnframes() == expected_frames
+        output = np.frombuffer(wav.readframes(expected_frames), dtype=np.int16)
+    if enabled:
+        assert output.max() == int(.9 * 32767)
+        assert np.count_nonzero(output) == 8000
+    else:
+        np.testing.assert_array_equal(output, signal[:, 0])

@@ -8,7 +8,8 @@
     "sample_rate": 16000,
     "channels": 1,
     "dtype": "int16",
-    "keep_temp_recordings": false
+    "keep_temp_recordings": false,
+    "preprocess": false
   },
   "transcription": {
     "model": "Infomaniak-AI/faster-whisper-large-v3-turbo",

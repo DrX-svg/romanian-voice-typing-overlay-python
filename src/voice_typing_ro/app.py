@@ -67,6 +67,7 @@ class VoiceTypingOverlayApp:
             logger=self.logger,
             input_device_index=self.current_input_device_index,
             input_device_name=self.current_input_device_name,
+            preprocess=self.settings.preprocess,
         )
 
         self.root = tk.Tk()
