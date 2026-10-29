@@ -22,15 +22,16 @@ True. Locations refer to `src/voice_typing_ro/settings.py`:
 
 | Config key | File:line |
 | --- | --- |
-| `ui.always_on_top` | `src/voice_typing_ro/settings.py:298` |
-| `audio.keep_temp_recordings` | `src/voice_typing_ro/settings.py:312` |
-| `transcription.without_timestamps` | `src/voice_typing_ro/settings.py:327` |
-| `transcription.condition_on_previous_text` | `src/voice_typing_ro/settings.py:333` |
-| `transcription.vad_filter` | `src/voice_typing_ro/settings.py:339` |
-| `show_advanced_devices` | `src/voice_typing_ro/settings.py:363` |
-| `dark_mode` | `src/voice_typing_ro/settings.py:369` via `normalize_dark_mode` at `src/voice_typing_ro/settings.py:99` |
-| `paste.restore_clipboard_after_paste` | `src/voice_typing_ro/settings.py:379` |
-| `hotkey_options.auto_paste_after_hotkey_transcription` | `src/voice_typing_ro/settings.py:522` (load); legacy `hotkey.auto_paste_after_hotkey_transcription` migration at `src/voice_typing_ro/settings.py:263` |
+| `ui.always_on_top` | `src/voice_typing_ro/settings.py:300` |
+| `audio.keep_temp_recordings` | `src/voice_typing_ro/settings.py:314` |
+| `audio.preprocess` | `src/voice_typing_ro/settings.py:317` |
+| `transcription.without_timestamps` | `src/voice_typing_ro/settings.py:330` |
+| `transcription.condition_on_previous_text` | `src/voice_typing_ro/settings.py:336` |
+| `transcription.vad_filter` | `src/voice_typing_ro/settings.py:342` |
+| `show_advanced_devices` | `src/voice_typing_ro/settings.py:366` |
+| `dark_mode` | `src/voice_typing_ro/settings.py:372` via `normalize_dark_mode` at `src/voice_typing_ro/settings.py:100` |
+| `paste.restore_clipboard_after_paste` | `src/voice_typing_ro/settings.py:382` |
+| `hotkey_options.auto_paste_after_hotkey_transcription` | `src/voice_typing_ro/settings.py:526` (load); legacy `hotkey.auto_paste_after_hotkey_transcription` migration at `src/voice_typing_ro/settings.py:265` |
 
 `tests/test_settings.py::test_dark_mode[false-False]` asserts the intended False
 result and is the only case marked `xfail(strict=True)` for this defect. The
