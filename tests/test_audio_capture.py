@@ -69,3 +69,30 @@ def test_empty_recording_raises(fake_sd, tmp_path, empty_chunk):
         recorder._audio_callback(np.empty((0, 2), dtype=np.int16), 0, None, None)
     with pytest.raises(audio.AudioCaptureError):
         recorder.stop_recording(tmp_path / "empty.wav")
+
+
+def test_start_failure_closes_stream(fake_sd):
+    stream = fake_sd.InputStream.return_value
+    stream.start.side_effect = RuntimeError("start failed")
+    recorder = make_recorder()
+    with pytest.raises(audio.AudioCaptureError, match="start failed"):
+        recorder.start_recording()
+    stream.close.assert_called_once_with()
+    assert recorder._stream is None
+    assert not recorder.is_recording
+
+
+@pytest.mark.parametrize("operation", ["stop", "cleanup"])
+def test_stop_failure_always_closes_stream(fake_sd, tmp_path, operation):
+    stream = fake_sd.InputStream.return_value
+    stream.stop.side_effect = RuntimeError("stop failed")
+    recorder = make_recorder()
+    recorder.start_recording()
+    if operation == "stop":
+        with pytest.raises(RuntimeError, match="stop failed"):
+            recorder.stop_recording(tmp_path / "capture.wav")
+    else:
+        recorder.cleanup()
+    stream.close.assert_called_once_with()
+    assert recorder._stream is None
+    assert not recorder.is_recording
