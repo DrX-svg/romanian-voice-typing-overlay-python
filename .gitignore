@@ -26,5 +26,7 @@ models/
 .idea/
 
 *.egg-info/
+*.pyd
+*.so
 build/
 dist/
