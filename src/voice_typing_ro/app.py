@@ -406,7 +406,11 @@ class VoiceTypingOverlayApp:
 
         try:
             result = self.recorder.stop_recording(temp_wav_path)
-        except AudioCaptureError as exc:
+        except Exception as exc:
+            try:
+                self.recorder.cleanup()
+            except Exception:
+                self.logger.exception("Failed to clean up after recording failure.")
             self._set_error(str(exc), exc)
             return
 
@@ -537,12 +541,15 @@ class VoiceTypingOverlayApp:
         try:
             while True:
                 event_name, payload = self.event_queue.get_nowait()
-                self._handle_event(event_name, payload)
+                try:
+                    self._handle_event(event_name, payload)
+                except Exception:
+                    self.logger.exception("Unhandled event handler failure: %s", event_name)
         except queue.Empty:
             pass
-
-        if self.root.winfo_exists():
-            self.root.after(100, self.process_events)
+        finally:
+            if self.root.winfo_exists():
+                self.root.after(100, self.process_events)
 
     def _handle_event(self, event_name: str, payload: dict) -> None:
         if event_name == "model_loaded":
