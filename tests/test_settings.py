@@ -88,3 +88,15 @@ def test_invalid_integer_falls_back_per_key(temp_config, capsys, section, key, d
 def test_zero_paste_delay_is_valid(temp_config):
     temp_config.write_text(json.dumps({"paste": {"paste_delay_ms": 0}}))
     assert settings.load_settings().paste_delay_ms == 0
+
+
+@pytest.mark.parametrize("value,expected", [(False, False), (True, True), (None, False), (0, False), (1, True)])
+def test_keep_temp_recordings_normalized(temp_config, value, expected):
+    temp_config.write_text(json.dumps({"audio": {"keep_temp_recordings": value}}))
+    assert settings.load_settings().keep_temp_recordings is expected
+    assert json.loads(temp_config.read_text())["audio"]["keep_temp_recordings"] is expected
+
+
+def test_keep_temp_recordings_default(temp_config):
+    assert settings.load_settings().keep_temp_recordings is False
+    assert json.loads(temp_config.read_text())["audio"]["keep_temp_recordings"] is False

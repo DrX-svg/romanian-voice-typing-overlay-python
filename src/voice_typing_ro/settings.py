@@ -27,6 +27,7 @@ DEFAULT_CONFIG_TEMPLATE = {
         "sample_rate": 16000,
         "channels": 1,
         "dtype": "int16",
+        "keep_temp_recordings": False,
     },
     "transcription": {
         "model": "Infomaniak-AI/faster-whisper-large-v3-turbo",
@@ -111,6 +112,7 @@ class AppSettings:
     sample_rate: int
     channels: int
     dtype: str
+    keep_temp_recordings: bool
     model_name: str
     language: str
     beam_size: int
@@ -307,6 +309,9 @@ def _normalize_config(config: dict) -> dict:
         str(audio.get("dtype") or defaults["audio"]["dtype"]).strip()
         or defaults["audio"]["dtype"]
     )
+    audio["keep_temp_recordings"] = bool(
+        audio.get("keep_temp_recordings", defaults["audio"]["keep_temp_recordings"])
+    )
 
     transcription["model"] = (
         str(transcription.get("model") or defaults["transcription"]["model"]).strip()
@@ -500,6 +505,7 @@ def load_settings() -> AppSettings:
         sample_rate=int(config["audio"]["sample_rate"]),
         channels=int(config["audio"]["channels"]),
         dtype=str(config["audio"]["dtype"]),
+        keep_temp_recordings=bool(config["audio"]["keep_temp_recordings"]),
         model_name=str(config["transcription"]["model"]),
         language=str(config["transcription"]["language"]),
         beam_size=int(config["transcription"]["beam_size"]),

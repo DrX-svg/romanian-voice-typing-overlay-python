@@ -51,3 +51,37 @@ def test_stop_failure_resets_state_and_controls(app_stub, tmp_path, monkeypatch,
     assert app_stub.current_recording_origin is None
     app_stub.gui.set_status.assert_called_once_with("Error")
     app_stub._refresh_controls.assert_called_once_with()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="app imports Windows clipboard APIs")
+@pytest.mark.parametrize("failure", [None, "expected", "unexpected"])
+@pytest.mark.parametrize("keep", [False, True])
+def test_transcription_worker_temp_file_policy(app_stub, tmp_path, failure, keep):
+    from voice_typing_ro.transcriber import TranscriberError
+
+    wav = tmp_path / "recording.wav"
+    wav.write_bytes(b"fake audio")
+    app_stub.settings = SimpleNamespace(keep_temp_recordings=keep)
+    app_stub.transcriber = Mock()
+    app_stub.transcriber.transcribe_file.return_value = ("text", .1)
+    if failure:
+        app_stub.transcriber.transcribe_file.side_effect = (
+            TranscriberError("failed") if failure == "expected" else RuntimeError("failed")
+        )
+    app_stub._transcribe_worker(wav)
+    assert wav.exists() is keep
+    event, payload = app_stub.event_queue.get_nowait()
+    assert event == ("transcription_error" if failure else "transcription_complete")
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="app imports Windows clipboard APIs")
+def test_temp_file_deletion_failure_only_logs(app_stub, tmp_path, monkeypatch, caplog):
+    from pathlib import Path
+
+    app_stub.settings = SimpleNamespace(keep_temp_recordings=False)
+    app_stub.transcriber = Mock()
+    app_stub.transcriber.transcribe_file.return_value = ("text", .1)
+    monkeypatch.setattr(Path, "unlink", Mock(side_effect=OSError("access denied")))
+    app_stub._transcribe_worker(tmp_path / "recording.wav")
+    assert "access denied" in caplog.text
+    assert app_stub.event_queue.get_nowait()[0] == "transcription_complete"

@@ -471,6 +471,13 @@ class VoiceTypingOverlayApp:
                 )
             )
 
+        finally:
+            if not self.settings.keep_temp_recordings:
+                try:
+                    wav_path.unlink()
+                except Exception:
+                    self.logger.exception("Could not delete temporary recording: %s", wav_path)
+
     def clear_transcript(self) -> None:
         self.gui.clear_transcript()
         self.last_transcript_text = ""
