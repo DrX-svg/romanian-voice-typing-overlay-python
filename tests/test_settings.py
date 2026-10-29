@@ -58,3 +58,33 @@ def test_runtime_round_trip(temp_config, preset, beam):
     assert (loaded.hotkey_combination, loaded.input_device_index, loaded.input_device_name) == ("ctrl+f9", 2, "Mic")
     assert (loaded.show_advanced_devices, loaded.window_opacity, loaded.dark_mode) == (True, .6, True)
     assert settings.update_runtime_config(beam_size=beam)["asr_preset"] == preset
+
+
+@pytest.mark.parametrize("section,key,default,invalid", [
+    ("audio", "sample_rate", 16000, "bad"),
+    ("audio", "sample_rate", 16000, 0),
+    ("audio", "sample_rate", 16000, -1),
+    ("audio", "channels", 1, "bad"),
+    ("audio", "channels", 1, 0),
+    ("audio", "channels", 1, -1),
+    ("paste", "paste_delay_ms", 150, "bad"),
+    ("paste", "paste_delay_ms", 150, -1),
+    ("audio", "sample_rate", 16000, None),
+    ("audio", "channels", 1, []),
+    ("paste", "paste_delay_ms", 150, {}),
+])
+def test_invalid_integer_falls_back_per_key(temp_config, capsys, section, key, default, invalid):
+    temp_config.write_text(json.dumps({section: {key: invalid}, "custom": "preserved", "ui": {"title": "Custom"}}))
+    loaded = settings.load_settings()
+    assert getattr(loaded, key) == default
+    saved = json.loads(temp_config.read_text())
+    assert saved[section][key] == default
+    assert saved["custom"] == "preserved"
+    assert saved["ui"]["title"] == "Custom"
+    assert f"{section}.{key}" in capsys.readouterr().err
+    assert not temp_config.with_name("config.invalid.json").exists()
+
+
+def test_zero_paste_delay_is_valid(temp_config):
+    temp_config.write_text(json.dumps({"paste": {"paste_delay_ms": 0}}))
+    assert settings.load_settings().paste_delay_ms == 0
