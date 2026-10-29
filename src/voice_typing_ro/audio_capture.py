@@ -616,8 +616,14 @@ class ManualAudioRecorder:
                 **stream_kwargs,
             )
             self._stream.start()
-        except Exception as exc:  # pragma: no cover - device-specific runtime path
-            self._stream = None
+        except Exception as exc:
+            try:
+                if self._stream is not None:
+                    self._stream.close()
+            except Exception:
+                self.logger.exception("Error while closing failed audio stream.")
+            finally:
+                self._stream = None
             raise AudioCaptureError(f"Could not start microphone capture: {exc}") from exc
 
         self._is_recording = True
@@ -635,8 +641,10 @@ class ManualAudioRecorder:
             raise AudioCaptureError("Recording is not active.")
 
         try:
-            self._stream.stop()
-            self._stream.close()
+            try:
+                self._stream.stop()
+            finally:
+                self._stream.close()
         finally:
             self._stream = None
             self._is_recording = False
@@ -673,8 +681,10 @@ class ManualAudioRecorder:
         if self._stream is None:
             return
         try:
-            self._stream.stop()
-            self._stream.close()
+            try:
+                self._stream.stop()
+            finally:
+                self._stream.close()
         except Exception:
             self.logger.exception("Error while cleaning up audio stream.")
         finally:

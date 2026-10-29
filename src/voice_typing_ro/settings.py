@@ -27,6 +27,7 @@ DEFAULT_CONFIG_TEMPLATE = {
         "sample_rate": 16000,
         "channels": 1,
         "dtype": "int16",
+        "keep_temp_recordings": False,
     },
     "transcription": {
         "model": "Infomaniak-AI/faster-whisper-large-v3-turbo",
@@ -111,6 +112,7 @@ class AppSettings:
     sample_rate: int
     channels: int
     dtype: str
+    keep_temp_recordings: bool
     model_name: str
     language: str
     beam_size: int
@@ -157,6 +159,17 @@ def _normalize_optional_int(value: object) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def _normalize_config_int(value: object, default: int, key: str, minimum: int) -> int:
+    try:
+        result = int(value)
+        if result < minimum:
+            raise ValueError("Value is below the minimum.")
+        return result
+    except (TypeError, ValueError, OverflowError):
+        _emit_config_notice(f"Invalid {key}; using default {default}.")
+        return default
 
 
 def _normalize_optional_string(value: object) -> str | None:
@@ -286,13 +299,18 @@ def _normalize_config(config: dict) -> dict:
         ui.get("always_on_top", defaults["ui"]["always_on_top"])
     )
 
-    audio["sample_rate"] = int(
-        audio.get("sample_rate") or defaults["audio"]["sample_rate"]
+    audio["sample_rate"] = _normalize_config_int(
+        audio.get("sample_rate"), defaults["audio"]["sample_rate"], "audio.sample_rate", 1
     )
-    audio["channels"] = int(audio.get("channels") or defaults["audio"]["channels"])
+    audio["channels"] = _normalize_config_int(
+        audio.get("channels"), defaults["audio"]["channels"], "audio.channels", 1
+    )
     audio["dtype"] = (
         str(audio.get("dtype") or defaults["audio"]["dtype"]).strip()
         or defaults["audio"]["dtype"]
+    )
+    audio["keep_temp_recordings"] = bool(
+        audio.get("keep_temp_recordings", defaults["audio"]["keep_temp_recordings"])
     )
 
     transcription["model"] = (
@@ -364,8 +382,8 @@ def _normalize_config(config: dict) -> dict:
             defaults["paste"]["restore_clipboard_after_paste"],
         )
     )
-    paste["paste_delay_ms"] = int(
-        paste.get("paste_delay_ms") or defaults["paste"]["paste_delay_ms"]
+    paste["paste_delay_ms"] = _normalize_config_int(
+        paste.get("paste_delay_ms"), defaults["paste"]["paste_delay_ms"], "paste.paste_delay_ms", 0
     )
 
     paths["logs_dir"] = _normalize_path_string(
@@ -487,6 +505,7 @@ def load_settings() -> AppSettings:
         sample_rate=int(config["audio"]["sample_rate"]),
         channels=int(config["audio"]["channels"]),
         dtype=str(config["audio"]["dtype"]),
+        keep_temp_recordings=bool(config["audio"]["keep_temp_recordings"]),
         model_name=str(config["transcription"]["model"]),
         language=str(config["transcription"]["language"]),
         beam_size=int(config["transcription"]["beam_size"]),
