@@ -75,6 +75,16 @@ def test_transcription_worker_temp_file_policy(app_stub, tmp_path, failure, keep
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="app imports Windows clipboard APIs")
+def test_missing_temp_file_does_not_log_error(app_stub, tmp_path, caplog):
+    app_stub.settings = SimpleNamespace(keep_temp_recordings=False)
+    app_stub.transcriber = Mock()
+    app_stub.transcriber.transcribe_file.return_value = ("text", .1)
+    app_stub._transcribe_worker(tmp_path / "already_missing.wav")
+    assert not caplog.records
+    assert app_stub.event_queue.get_nowait()[0] == "transcription_complete"
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="app imports Windows clipboard APIs")
 def test_temp_file_deletion_failure_only_logs(app_stub, tmp_path, monkeypatch, caplog):
     from pathlib import Path
 

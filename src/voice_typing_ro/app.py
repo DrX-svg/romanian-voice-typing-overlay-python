@@ -474,7 +474,7 @@ class VoiceTypingOverlayApp:
         finally:
             if not self.settings.keep_temp_recordings:
                 try:
-                    wav_path.unlink()
+                    wav_path.unlink(missing_ok=True)
                 except Exception:
                     self.logger.exception("Could not delete temporary recording: %s", wav_path)
 

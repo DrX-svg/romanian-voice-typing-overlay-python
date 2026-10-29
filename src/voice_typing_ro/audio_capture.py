@@ -616,7 +616,7 @@ class ManualAudioRecorder:
                 **stream_kwargs,
             )
             self._stream.start()
-        except Exception as exc:  # pragma: no cover - device-specific runtime path
+        except Exception as exc:
             try:
                 if self._stream is not None:
                     self._stream.close()

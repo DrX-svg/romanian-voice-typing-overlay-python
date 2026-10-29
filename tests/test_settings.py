@@ -21,7 +21,13 @@ def test_opacity(value, expected):
     assert settings.normalize_window_opacity(value) == expected
 
 
-@pytest.mark.parametrize("value,expected", [(None, False), (False, False), (0, False), (True, True), ("false", True)])
+@pytest.mark.parametrize("value,expected", [
+    (None, False), (False, False), (0, False), (True, True),
+    pytest.param("false", False, marks=pytest.mark.xfail(
+        strict=True,
+        reason="Known defect: boolean normalization uses truthiness; see docs/DEFECTS.md",
+    )),
+])
 def test_dark_mode(value, expected):
     assert settings.normalize_dark_mode(value) is expected
 
